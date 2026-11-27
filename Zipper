@@ -1,0 +1,127 @@
+using System;
+
+public class BinTree
+{
+    public BinTree(int value, BinTree? left, BinTree? right)
+    {
+        Value = value;
+        Left = left;
+        Right = right;
+    }
+
+    public int Value { get; }
+    public BinTree? Left { get; }
+    public BinTree? Right { get; }
+
+    public override bool Equals(object? obj)
+    {
+        return obj is BinTree other &&
+               Value == other.Value &&
+               Equals(Left, other.Left) &&
+               Equals(Right, other.Right);
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Value, Left, Right);
+    }
+}
+
+public class Zipper
+{
+    private readonly BinTree tree;
+    private readonly Zipper? parent;
+    private readonly bool isLeft;
+
+    private Zipper(BinTree tree, Zipper? parent, bool isLeft)
+    {
+        this.tree = tree;
+        this.parent = parent;
+        this.isLeft = isLeft;
+    }
+
+    public int Value()
+    {
+        return tree.Value;
+    }
+
+    public Zipper SetValue(int newValue)
+    {
+        return new Zipper(
+            new BinTree(newValue, tree.Left, tree.Right),
+            parent, isLeft);
+    }
+
+    public Zipper SetLeft(BinTree? binTree)
+    {
+        return new Zipper(
+            new BinTree(tree.Value, binTree, tree.Right),
+            parent, isLeft);
+    }
+
+    public Zipper SetRight(BinTree? binTree)
+    {
+        return new Zipper(
+            new BinTree(tree.Value, tree.Left, binTree),
+            parent, isLeft);
+    }
+
+    public Zipper? Left()
+    {
+        return tree.Left == null
+            ? null
+            : new Zipper(tree.Left, this, true);
+    }
+
+    public Zipper? Right()
+    {
+        return tree.Right == null
+            ? null
+            : new Zipper(tree.Right, this, false);
+    }
+
+    public Zipper? Up()
+    {
+        if (parent == null)
+            return null;
+
+        return isLeft
+            ? parent.SetLeft(tree)
+            : parent.SetRight(tree);
+    }
+
+    public BinTree ToTree()
+    {
+        Zipper current = this;
+
+        while (current.parent != null)
+            current = current.Up()!;
+
+        return current.tree;
+    }
+
+    public static Zipper FromTree(BinTree tree)
+    {
+        return new Zipper(tree, null, false);
+    }
+
+    private string GetPath()
+    {
+        if (parent == null)
+            return "";
+
+        return parent.GetPath() + (isLeft ? "L" : "R");
+    }
+
+    public override bool Equals(object? obj)
+    {
+        return obj is Zipper other &&
+               ToTree().Equals(other.ToTree()) &&
+               GetPath() == other.GetPath();
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(ToTree(), GetPath());
+    }
+}
