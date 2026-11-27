@@ -1,0 +1,55 @@
+using System;
+using System.Collections.Generic;
+
+public static class VariableLengthQuantity
+{
+    public static uint[] Encode(uint[] numbers)
+    {
+        List<uint> result = new List<uint>();
+
+        foreach (uint number in numbers)
+        {
+            uint value = number;
+            Stack<uint> bytes = new Stack<uint>();
+
+            bytes.Push(value & 0x7F);
+            value >>= 7;
+
+            while (value > 0)
+            {
+                bytes.Push((value & 0x7F) | 0x80);
+                value >>= 7;
+            }
+
+            while (bytes.Count > 0)
+                result.Add(bytes.Pop());
+        }
+
+        return result.ToArray();
+    }
+
+    public static uint[] Decode(uint[] bytes)
+    {
+        List<uint> result = new List<uint>();
+        uint value = 0;
+        bool incomplete = false;
+
+        foreach (uint b in bytes)
+        {
+            value = (value << 7) | (b & 0x7F);
+            incomplete = (b & 0x80) != 0;
+
+            if (!incomplete)
+            {
+                result.Add(value);
+                value = 0;
+            }
+        }
+
+        if (incomplete)
+            throw new InvalidOperationException(
+                "Incomplete byte sequence.");
+
+        return result.ToArray();
+    }
+}
