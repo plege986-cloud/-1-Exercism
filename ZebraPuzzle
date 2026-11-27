@@ -1,0 +1,106 @@
+using System;
+using System.Collections.Generic;
+
+public enum Nationality
+{
+    Englishman,
+    Spaniard,
+    Ukrainian,
+    Norwegian,
+    Japanese
+}
+
+public static class ZebraPuzzle
+{
+    public static Nationality DrinksWater()
+    {
+        return Solve().water;
+    }
+
+    public static Nationality OwnsZebra()
+    {
+        return Solve().zebra;
+    }
+
+    private static (Nationality water, Nationality zebra) Solve()
+    {
+        var permutations = Permutations();
+
+        foreach (var c in permutations)
+        {
+            int red = c[0], green = c[1], ivory = c[2];
+            int yellow = c[3], blue = c[4];
+
+            if (green != ivory + 1 || blue != 2)
+                continue;
+
+            foreach (var n in permutations)
+            {
+                if (n[0] != red || n[3] != 1)
+                    continue;
+
+                foreach (var d in permutations)
+                {
+                    int coffee = d[0], tea = d[1];
+                    int milk = d[2], juice = d[3], water = d[4];
+
+                    if (coffee != green || tea != n[2] || milk != 3)
+                        continue;
+
+                    foreach (var h in permutations)
+                    {
+                        int dancing = h[0], painting = h[1];
+                        int reading = h[2], football = h[3];
+                        int chess = h[4];
+
+                        if (painting != yellow ||
+                            football != juice || chess != n[4])
+                            continue;
+
+                        foreach (var p in permutations)
+                        {
+                            int dog = p[0], snails = p[1];
+                            int fox = p[2], horse = p[3];
+                            int zebra = p[4];
+
+                            if (dog != n[1] || snails != dancing)
+                                continue;
+
+                            if (Math.Abs(reading - fox) != 1 ||
+                                Math.Abs(painting - horse) != 1)
+                                continue;
+
+                            return (
+                                (Nationality)Array.IndexOf(n, water),
+                                (Nationality)Array.IndexOf(n, zebra)
+                            );
+                        }
+                    }
+                }
+            }
+        }
+
+        throw new InvalidOperationException();
+    }
+
+    private static List<int[]> Permutations()
+    {
+        var result = new List<int[]>();
+
+        for (int a = 1; a <= 5; a++)
+        for (int b = 1; b <= 5; b++)
+        for (int c = 1; c <= 5; c++)
+        for (int d = 1; d <= 5; d++)
+        for (int e = 1; e <= 5; e++)
+        {
+            if (a != b && a != c && a != d && a != e &&
+                b != c && b != d && b != e &&
+                c != d && c != e && d != e)
+            {
+                result.Add(new[] { a, b, c, d, e });
+            }
+        }
+
+        return result;
+    }
+}
