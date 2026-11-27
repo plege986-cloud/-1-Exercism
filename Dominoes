@@ -1,0 +1,55 @@
+using System.Collections.Generic;
+using System.Linq;
+
+public static class Dominoes
+{
+    public static bool CanChain(
+        IEnumerable<(int, int)> dominoes)
+    {
+        var tiles = dominoes.ToList();
+
+        if (tiles.Count == 0)
+            return true;
+
+        var used = new bool[tiles.Count];
+        used[0] = true;
+
+        return FindChain(
+            tiles, used, tiles[0].Item1,
+            tiles[0].Item2, 1);
+    }
+
+    private static bool FindChain(
+        List<(int, int)> tiles,
+        bool[] used,
+        int start,
+        int current,
+        int count)
+    {
+        if (count == tiles.Count)
+            return current == start;
+
+        for (int i = 0; i < tiles.Count; i++)
+        {
+            if (used[i])
+                continue;
+
+            var (a, b) = tiles[i];
+
+            if (a == current || b == current)
+            {
+                used[i] = true;
+
+                int next = a == current ? b : a;
+
+                if (FindChain(
+                    tiles, used, start, next, count + 1))
+                    return true;
+
+                used[i] = false;
+            }
+        }
+
+        return false;
+    }
+}
