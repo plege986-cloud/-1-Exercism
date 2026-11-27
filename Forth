@@ -1,0 +1,112 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+public static class Forth
+{
+    public static string Evaluate(string[] instructions)
+    {
+        var stack = new Stack<int>();
+        var words = new Dictionary<string, string[]>();
+
+        foreach (string instruction in instructions)
+        {
+            string[] tokens = instruction.ToLowerInvariant()
+                .Split((char[])null, StringSplitOptions.RemoveEmptyEntries);
+
+            for (int i = 0; i < tokens.Length; i++)
+            {
+                if (tokens[i] == ":")
+                {
+                    string name = tokens[++i];
+
+                    if (int.TryParse(name, out _))
+                        throw new InvalidOperationException();
+
+                    var definition = new List<string>();
+
+                    while (++i < tokens.Length && tokens[i] != ";")
+                    {
+                        if (words.TryGetValue(tokens[i], out var existing))
+                            definition.AddRange(existing);
+                        else
+                            definition.Add(tokens[i]);
+                    }
+
+                    words[name] = definition.ToArray();
+                }
+                else if (words.TryGetValue(tokens[i], out var commands))
+                {
+                    foreach (string command in commands)
+                        Execute(command, stack);
+                }
+                else
+                {
+                    Execute(tokens[i], stack);
+                }
+            }
+        }
+
+        return string.Join(" ", stack.Reverse());
+    }
+
+    private static void Execute(string token, Stack<int> stack)
+    {
+        if (int.TryParse(token, out int number))
+        {
+            stack.Push(number);
+            return;
+        }
+
+        switch (token)
+        {
+            case "+":
+            case "-":
+            case "*":
+            case "/":
+                if (stack.Count < 2)
+                    throw new InvalidOperationException();
+
+                int b = stack.Pop();
+                int a = stack.Pop();
+
+                switch (token)
+                {
+                    case "+": stack.Push(a + b); break;
+                    case "-": stack.Push(a - b); break;
+                    case "*": stack.Push(a * b); break;
+                    case "/": stack.Push(a / b); break;
+                }
+                break;
+
+            case "dup":
+                stack.Push(stack.Peek());
+                break;
+
+            case "drop":
+                stack.Pop();
+                break;
+
+            case "swap":
+                if (stack.Count < 2)
+                    throw new InvalidOperationException();
+
+                int x = stack.Pop();
+                int y = stack.Pop();
+
+                stack.Push(x);
+                stack.Push(y);
+                break;
+
+            case "over":
+                if (stack.Count < 2)
+                    throw new InvalidOperationException();
+
+                stack.Push(stack.ElementAt(1));
+                break;
+
+            default:
+                throw new InvalidOperationException();
+        }
+    }
+}
